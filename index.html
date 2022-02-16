@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Countries API Mobile-first Vanilla JS One-page App</title>
+	<meta name="description" content="Demographic data for coutries around the world">
+	<!-- <link rel="stylesheet" href="main.css"> -->
+</head>
+<body>
+	<header>
+		<div class="top-bar">
+			<h1>Where in the world?</h1>
+			<button>Dark Mode</button>
+		</div>
+		<button hidden>Back</button>
+		<form id="search">
+			<input type="text" name="search" placeholder="Search for a country…" aria-label="Search for a country">
+		</form>
+		<form id="filter">
+			<select name="filter" aria-label="Filter by region">
+				<option value="">Filter by Region</option>
+				<option>Africa</option>
+				<option>Americas</option>
+				<option>Asia</option>
+				<option>Europe</option>
+				<option>Oceania</option>
+			</select>
+		</form>
+	</header>
+	<main>
+		<div id="country-list"></div>
+	</main>
+
+
+	<script>
+		const cList = document.getElementById('country-list');
+		let display = 'all';
+		let currentURL = new URL(document.location.href);
+
+		// handle fetch responses
+		function handleResponse(response) {
+			return response.json()
+			.then(json => {
+				if (response.ok) {
+					return json
+				} else {
+					return Promise.reject(json)
+				}
+			})
+		}
+
+		function updateList(list) {
+			let index = 0;
+			let length = Object.keys(list).length;
+			for (const country of list) {
+				// link
+				let tileLink = document.createElement('a');
+				if (currentURL.searchParams.get('search') && currentURL.searchParams.get('search').length > 0) {
+					tileLink.href = `?detail=${country.cca3}&search=${currentURL.searchParams.get('search')}`;
+				} else if (currentURL.searchParams.get('filter') && currentURL.searchParams.get('filter').length > 0) {
+					tileLink.href = `?detail=${country.cca3}&filter=${currentURL.searchParams.get('filter')}`;
+				} else {
+					tileLink.href = `?detail=${country.cca3}`;
+				}
+				tileLink.id = country.cca3;
+				// img
+				let tileImg = new Image();
+				tileImg.src = country.flags.svg;
+				tileImg.onload = function() {
+					tileImg.width = tileImg.width;
+					tileImg.height = tileImg.height;
+				}
+				tileImg.alt = `Flag of ${country.name.common}`;
+				if(index > 12) {
+					tileImg.loading = 'lazy';
+				}
+				// ul
+				let tileUl = document.createElement('ul');
+				// name
+				let tileName = document.createElement('li');
+				let tileNameH2 = document.createElement('h2');
+				let tileNameH2text = document.createTextNode(country.name.common);
+				tileNameH2.appendChild(tileNameH2text);
+				tileName.appendChild(tileNameH2);
+				// population
+				let tilePop = document.createElement('li');
+				let tilePopHdr = document.createElement('b');
+				let tilePopHdrText = document.createTextNode("Population: ");
+				let tilePopText = document.createTextNode(country.population.toLocaleString());
+				tilePopHdr.appendChild(tilePopHdrText);
+				tilePop.appendChild(tilePopHdr);
+				tilePop.appendChild(tilePopText);
+				// region
+				let tileReg = document.createElement('li');
+				let tileRegHdr = document.createElement('b');
+				let tileRegHdrText = document.createTextNode("Region: ");
+				let tileRegText = document.createTextNode(country.region);
+				tileRegHdr.appendChild(tileRegHdrText);
+				tileReg.appendChild(tileRegHdr);
+				tileReg.appendChild(tileRegText);
+				// capital
+				let tileCap = document.createElement('li');
+				let tileCapHdr = document.createElement('b');
+				let tileCapHdrText = document.createTextNode("Capital: ");
+				let tileCapText = document.createTextNode(country.capital);
+				tileCapHdr.appendChild(tileCapHdrText);
+				tileCap.appendChild(tileCapHdr);
+				tileCap.appendChild(tileCapText);
+				// appends
+				tileUl.appendChild(tileName);
+				tileUl.appendChild(tilePop);
+				tileUl.appendChild(tileReg);
+				tileUl.appendChild(tileCap);
+				tileLink.appendChild(tileImg);
+				tileLink.appendChild(tileUl);
+				// tileArticle.appendChild(tileLink);
+				cList.appendChild(tileLink);
+				index++;
+			}
+		}
+
+		function showDetail(country) {
+			document.querySelector('html').classList.add('detail');
+			let cDetail = `<article><img src="${country[0].flags.svg}" alt="Flag of ${country[0].name.common}" loading="lazy"><ul><li><h2>${country[0].name.common}</h2></li><li><b>Native Name:</b> ${Object.values(country[0].name.nativeName)[0].official}</li><li><b>Population:</b> ${country[0].population.toLocaleString()}</li><li><b>Region:</b> ${country[0].region}</li><li><b>Sub Region:</b> ${country[0].subregion}</li><li><b>Capital:</b> ${country[0].capital[0]}</li><li class="space-top"><b>Top Level Domain:</b> ${country[0].tld[0]}</li>`;
+			// currency
+			let currIndex = 0;
+			let currLength = Object.keys(country[0].currencies).length;
+			cDetail += `<li><b>Currenc${(currLength > 1) ? 'ies' : 'y'}:</b> `;
+			for (var key in country[0]) {
+				if (key === 'currencies') {
+					currObj = country[0][key];
+					for (var curr in currObj) {
+						cDetail += currObj[curr].name;
+						if((currIndex + 1) < currLength) {
+							cDetail += ', ';
+						}
+						currIndex++;
+					}
+				}
+			}
+			cDetail += `</li><li><b>Language${(Object.keys(country[0].languages).length > 1) ? 's' : ''}:</b> `;
+			// languages
+			let langIndex = 0;
+			let langLength = Object.keys(country[0].languages).length;
+			for (var key in country[0]) {
+				if (key === 'languages') {
+					langObj = country[0][key];
+					for (var lang in langObj) {
+						cDetail += langObj[lang];
+						if((langIndex + 1) < langLength) {
+							cDetail += ', ';
+						}
+						langIndex++;
+					}
+				}
+			}
+			cDetail += `</li><li class="space-top borders"><b>Border Countries:</b><div class="border-links"></div></li></ul></article>`;
+			cList.insertAdjacentHTML('afterbegin', cDetail);
+			// border countries
+			const borderBox = document.querySelector('.border-links');
+			country[0].borders.forEach(border => {
+				fetch('https://restcountries.com/v3.1/alpha?codes=' + border + '&fields=name;')
+				.then(handleResponse)
+				.then(thisBorder => {
+					let searchParam = '';
+					let filterParam = '';
+					if (currentURL.searchParams.get('search') && currentURL.searchParams.get('search').length > 0) {
+						searchParam = '&search=' + currentURL.searchParams.get('search');
+					}
+					if (currentURL.searchParams.get('filter') && currentURL.searchParams.get('filter').length > 0) {
+						filterParam = '&filter=' + currentURL.searchParams.get('filter');
+					}
+					let borderCountry = `<a href="?detail=${border}${searchParam}${filterParam}">${thisBorder[0].name.common}</a>`;
+					borderBox.insertAdjacentHTML('afterbegin', borderCountry);
+				})
+				.catch(error => console.log(error.message));
+			});
+		}
+
+		function goBack(e) {
+			let backURL = new URL(document.location.href);
+			backURL.searchParams.delete('detail');
+			backURL.hash = currentURL.searchParams.get('detail');
+			location.assign(backURL.href);
+			e.preventDefault();
+		}
+		const backButton = document.querySelector('header > button');
+		backButton.addEventListener('click', goBack);
+
+		// form functions
+		const searchBox = document.querySelector('#search input[type=text]');
+		const filterForm = document.getElementById('filter');
+		const filterBox = document.querySelector('#filter select');
+		const filterBoxOptions = document.querySelectorAll('#filter select option');
+		function submitFilterForm() {
+			filterForm.submit();
+		}
+		filterBox.addEventListener('change', submitFilterForm);
+
+		// check url for page display method
+		if (currentURL.searchParams.get('search') && currentURL.searchParams.get('search').length > 0) {
+			display = 'search';
+			searchBox.value = currentURL.searchParams.get('search');
+		}
+		if (currentURL.searchParams.get('filter') && currentURL.searchParams.get('filter').length > 0) {
+			filterBoxOptions.forEach(function(opt) {
+				if(opt.value === currentURL.searchParams.get('filter')) {
+					opt.selected = true;
+					searchBox.value = '';
+					display = 'filter';
+				}
+			})
+		}
+		if (currentURL.searchParams.get('detail') && currentURL.searchParams.get('detail').length > 0) {
+			display = 'detail';
+		}
+
+		switch (display) {
+			case 'detail':
+				fetch('https://restcountries.com/v3.1/alpha/' + currentURL.searchParams.get('detail'))
+				.then(handleResponse)
+				.then(myData => showDetail(myData))
+				.catch(error => console.log(error.message));
+				break;
+
+			case 'search':
+				fetch('https://restcountries.com/v3.1/name/' + currentURL.searchParams.get('search') + '?fields=flags,name,population,region,capital,cca3')
+				.then(handleResponse)
+				.then(myData => updateList(myData))
+				.catch(error => console.log(error.message));
+				break;
+
+			case 'filter':
+				fetch('https://restcountries.com/v3.1/region/' + currentURL.searchParams.get('filter') + '?fields=flags,name,population,region,capital,cca3')
+				.then(handleResponse)
+				.then(myData => updateList(myData))
+				.catch(error => console.log(error.message));
+				break;
+
+			case 'all':
+				fetch('https://restcountries.com/v3.1/all?fields=flags,name,population,region,capital,cca3')
+				.then(handleResponse)
+				.then(myData => updateList(myData))
+				.catch(error => console.log(error.message));
+				break;
+		}
+
+		// dark mode
+		const modeBtn = document.querySelector('.top-bar button');
+		function activateDarkMode() {
+			document.querySelector('html').classList.add('dark');
+			localStorage.setItem('darkMode', true);
+			modeBtn.innerText = 'Light Mode';
+		}
+		function activateLightMode() {
+			document.querySelector('html').classList.remove('dark');
+			localStorage.setItem('darkMode', false);
+			modeBtn.innerText = 'Dark Mode';
+		}
+		function switchMode() {
+			if (localStorage.getItem('darkMode')) {
+				if (localStorage.getItem('darkMode') == 'true') {
+					activateLightMode();
+				} else {
+					activateDarkMode();
+				}
+			} else {
+				activateLightMode();
+			}
+		}
+		modeBtn.addEventListener('click', switchMode);
+		// check for dark mode
+		function setColorScheme() {
+			if (localStorage.getItem('darkMode')) {
+				if (localStorage.getItem('darkMode') == 'true') {
+					activateDarkMode();
+				} else {
+					activateLightMode();
+				}
+			} else {
+				const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+				const isLightMode = window.matchMedia("(prefers-color-scheme: light)").matches;
+				const isNotSchemeSpecified = window.matchMedia("(prefers-color-scheme: no-preference)").matches;
+				const hasNoSchemeSupport = !isDarkMode && !isLightMode && !isNotSpecified;
+				window.matchMedia("(prefers-color-scheme: dark)").addListener(e => e.matches && activateDarkMode());
+				window.matchMedia("(prefers-color-scheme: light)").addListener(e => e.matches && activateLightMode());
+				if(isDarkMode) activateDarkMode();
+				if(isLightMode || isNotSchemeSpecified || hasNoSchemeSupport) activateLightMode();
+			}
+		}
+		setColorScheme();
+	</script>
+
+	<link rel="stylesheet" href="main.css">
+	<link href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,600,800&display=swap" rel="stylesheet">
+
+</body>
+</html>
