@@ -71,7 +71,7 @@
 					tileImg.height = tileImg.height;
 				}
 				tileImg.alt = `Flag of ${country.name.common}`;
-				if(index > 12) {
+				if(index > 11) {
 					tileImg.loading = 'lazy';
 				}
 				// ul
@@ -121,7 +121,7 @@
 
 		function showDetail(country) {
 			document.querySelector('html').classList.add('detail');
-			let cDetail = `<article><img src="${country[0].flags.svg}" alt="Flag of ${country[0].name.common}" loading="lazy"><ul><li><h2>${country[0].name.common}</h2></li><li><b>Native Name:</b> ${Object.values(country[0].name.nativeName)[0].official}</li><li><b>Population:</b> ${country[0].population.toLocaleString()}</li><li><b>Region:</b> ${country[0].region}</li><li><b>Sub Region:</b> ${country[0].subregion}</li><li><b>Capital:</b> ${country[0].capital[0]}</li><li class="space-top"><b>Top Level Domain:</b> ${country[0].tld[0]}</li>`;
+			let cDetail = `<article><img src="${country[0].flags.svg}" alt="Flag of ${country[0].name.common}"><ul><li><h2>${country[0].name.common}</h2></li><li><b>Native Name:</b> ${Object.values(country[0].name.nativeName)[0].official}</li><li><b>Population:</b> ${country[0].population.toLocaleString()}</li><li><b>Region:</b> ${country[0].region}</li><li><b>Sub Region:</b> ${country[0].subregion}</li><li><b>Capital:</b> ${country[0].capital[0]}</li><li class="space-top"><b>Top Level Domain:</b> ${country[0].tld[0]}</li>`;
 			// currency
 			let currIndex = 0;
 			let currLength = Object.keys(country[0].currencies).length;
